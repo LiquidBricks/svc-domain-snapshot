@@ -87,9 +87,10 @@ test('router exposes inbound params and runs the data snapshot route through ack
   })
   assert.equal(
     published[0].subject,
-    'dev.domain.tenant-a.context-a.snapshot.data.result.v1.event-1',
+    'dev.domain.tenant-a.delta.snapshot.data.result.v1.event-1',
   )
   assert.equal(published[0].payload.data.type, 'data')
+  assert.equal(Object.hasOwn(published[0].payload.data, 'state'), false)
   assert.deepEqual(published[0].payload.data.delta, {
     'data.url': 'https://example.test',
   })

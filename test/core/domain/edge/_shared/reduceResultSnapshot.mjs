@@ -48,7 +48,7 @@ function makeRootCtx({ currentState, calls, published }) {
   }
 }
 
-test('single-writer reducer merges, persists, then publishes the full state and delta', async () => {
+test('single-writer reducer merges and persists the full state, then publishes only the delta', async () => {
   const calls = []
   const published = []
   const currentState = {
@@ -105,9 +105,9 @@ test('single-writer reducer merges, persists, then publishes the full state and 
   })
   assert.equal(
     published[0].subject,
-    'dev.domain.tenant-a.context-a.snapshot.data.result.v1.event-1',
+    'dev.domain.tenant-a.delta.snapshot.data.result.v1.event-1',
   )
-  assert.deepEqual(published[0].payload.data.state, result.state)
+  assert.equal(Object.hasOwn(published[0].payload.data, 'state'), false)
   assert.deepEqual(published[0].payload.data.delta, result.delta)
   assert.equal(published[0].payload.data.componentStateId, 'component-state-1')
   assert.equal(published[0].payload.data.updatedAt, updatedAt)

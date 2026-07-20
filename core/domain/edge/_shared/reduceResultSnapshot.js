@@ -26,7 +26,7 @@ function snapshotSubject({ emits, type, subjectParams }) {
     .set({
       env: subjectParams.env,
       tenant: subjectParams.tenant,
-      context: subjectParams.context,
+      context: 'delta',
       id: subjectParams.id,
     })
     .build()
@@ -98,7 +98,6 @@ export function createResultSnapshotReducer({ type }) {
           gateInstanceRefId,
           type,
           name,
-          state,
           delta,
           updatedAt,
         },
