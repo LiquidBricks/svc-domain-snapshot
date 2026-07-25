@@ -17,6 +17,9 @@ function validScope(overrides = {}) {
     handlerDiagnostics: makeDiagnostics(),
     instanceId: 'instance-1',
     instanceVertexId: 'instance-vertex-1',
+    stateMachineId: 'state-machine-1',
+    stateEdgeId: 'state-edge-1',
+    gateInstanceRefId: 'gate-instance-ref-1',
     name: 'result-name',
     result: null,
     type: 'untrusted-type',
@@ -47,7 +50,7 @@ test('validator rejects a payload without a native result property', () => {
   )
 })
 
-for (const field of ['instanceId', 'instanceVertexId', 'name']) {
+for (const field of ['instanceId', 'instanceVertexId', 'stateMachineId', 'stateEdgeId', 'name', 'updatedAt']) {
   test(`validator rejects missing ${field}`, () => {
     assert.throws(
       () => validateData({ scope: validScope({ [field]: '' }) }),
@@ -55,3 +58,23 @@ for (const field of ['instanceId', 'instanceVertexId', 'name']) {
     )
   })
 }
+
+test('validator rejects an invalid result timestamp', () => {
+  for (const updatedAt of ['not-a-date', '2026-07-20']) {
+    assert.throws(
+      () => validateData({ scope: validScope({ updatedAt }) }),
+      (error) => {
+        assert.equal(error instanceof DiagnosticError, true)
+        assert.equal(error.code, 'DOMAIN_SNAPSHOT_PRECONDITION_INVALID')
+        return true
+      },
+    )
+  }
+})
+
+test('gate validator rejects a missing gateInstanceRefId', () => {
+  assert.throws(
+    () => validateGate({ scope: validScope({ gateInstanceRefId: '' }) }),
+    DiagnosticError,
+  )
+})
