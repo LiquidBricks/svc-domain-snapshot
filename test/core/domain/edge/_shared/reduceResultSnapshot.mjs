@@ -53,7 +53,10 @@ test('single-writer reducer merges and persists the full state, then publishes o
   const published = []
   const currentState = {
     'data.url': null,
+    'data.url.state': 'started',
     'task.fetch': null,
+    'task.fetch.state': null,
+    'instance.state': 'created',
   }
   const updatedAt = '2026-07-19T12:34:56.000Z'
   const resultValue = { href: 'https://example.test' }
@@ -94,14 +97,20 @@ test('single-writer reducer merges and persists the full state, then publishes o
   ])
   assert.deepEqual(currentState, {
     'data.url': null,
+    'data.url.state': 'started',
     'task.fetch': null,
+    'task.fetch.state': null,
+    'instance.state': 'created',
   })
   assert.deepEqual(result.delta, {
     'data.url': resultValue,
   })
   assert.deepEqual(result.state, {
     'data.url': resultValue,
+    'data.url.state': 'started',
     'task.fetch': null,
+    'task.fetch.state': null,
+    'instance.state': 'created',
   })
   assert.equal(
     published[0].subject,

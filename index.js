@@ -12,21 +12,42 @@ export function createConsumerConfig() {
     deliver_policy: DeliverPolicy.All,
     max_ack_pending: 1,
     filter_subjects: [
+      createBasicSubject(natsEvents['*'].domain['*']['*'].vertex.componentInstance.created.v1['*']).forSubscribe().build(),
       createBasicSubject(natsEvents['*'].domain['*']['*'].edge.has_data_state.result_computed.v1['*']).forSubscribe().build(),
+      createBasicSubject(natsEvents['*'].domain['*']['*'].edge.has_data_state.started.v1['*']).forSubscribe().build(),
       createBasicSubject(natsEvents['*'].domain['*']['*'].edge.has_task_state.result_computed.v1['*']).forSubscribe().build(),
+      createBasicSubject(natsEvents['*'].domain['*']['*'].edge.has_task_state.started.v1['*']).forSubscribe().build(),
       createBasicSubject(natsEvents['*'].domain['*']['*'].edge.has_gate_state.result_computed.v1['*']).forSubscribe().build(),
     ],
   }
 }
 
+function configuredFilterSubjects(info) {
+  const { filter_subjects: filterSubjects = [] } = info?.config ?? {}
+  return Array.isArray(filterSubjects) ? filterSubjects : [filterSubjects]
+}
+
+function sameFilterSubjects(current, expected) {
+  if (current.length !== expected.length) return false
+  const currentSet = new Set(current)
+  return expected.every(subject => currentSet.has(subject))
+}
+
 export async function ensureConsumer({ streamName, jetstreamManager }) {
+  const config = createConsumerConfig()
+
   try {
-    return await jetstreamManager.consumers.info(streamName, consumerName)
+    const info = await jetstreamManager.consumers.info(streamName, consumerName)
+    if (sameFilterSubjects(configuredFilterSubjects(info), config.filter_subjects)) return info
+
+    return jetstreamManager.consumers.update(streamName, consumerName, {
+      filter_subjects: config.filter_subjects,
+    })
   } catch (error) {
     if (error?.code !== JetStreamApiCodes.ConsumerNotFound) throw error
   }
 
-  return jetstreamManager.consumers.add(streamName, createConsumerConfig())
+  return jetstreamManager.consumers.add(streamName, config)
 }
 
 export async function consumeMessages({ messages, router }) {
