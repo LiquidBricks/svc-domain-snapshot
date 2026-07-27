@@ -21,12 +21,12 @@ function parseState(value) {
 }
 
 function snapshotSubject({ emits, type, subjectParams }) {
-  return createSubject(emits[`domain.snapshot.${type}.result.v1`])
+  return createSubject(emits[`domain.snapshot.${type}.state.v1`])
     .forPublish()
     .set({
       env: subjectParams.env,
       tenant: subjectParams.tenant,
-      context: 'state',
+      context: 'delta',
       id: subjectParams.id,
     })
     .build()
@@ -95,6 +95,7 @@ export function createStartedSnapshotReducer({ type }) {
           stateId,
           type,
           name,
+          state: 'started',
           delta,
           updatedAt,
         },

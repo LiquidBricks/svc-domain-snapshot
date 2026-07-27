@@ -5,14 +5,14 @@ import { createStartedSnapshotReducer } from '../../../../../core/domain/edge/_s
 import { makeDiagnostics } from '../../../../helpers.mjs'
 
 const emits = {
-  'domain.snapshot.data.result.v1': {
+  'domain.snapshot.data.state.v1': {
     env: '*',
     ns: 'domain',
     tenant: '*',
     context: '*',
     channel: 'snapshot',
     entity: 'data',
-    action: 'result',
+    action: 'state',
     version: 'v1',
     id: '*',
   },
@@ -106,8 +106,9 @@ test('started reducer preserves the result and updates its adjacent state key', 
   })
   assert.equal(
     published[0].subject,
-    'prod.domain._.state.snapshot.data.result.v1._',
+    'prod.domain._.delta.snapshot.data.state.v1._',
   )
+  assert.equal(published[0].payload.data.state, 'started')
   assert.deepEqual(published[0].payload.data.delta, result.delta)
   assert.equal(published[0].payload.data.name, 'recipient')
 })

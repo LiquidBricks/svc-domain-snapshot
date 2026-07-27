@@ -7,8 +7,8 @@ import { validatePayload } from './validatePayload.js'
 export { path }
 
 export const emits = {
-  'domain.snapshot.data.result.v1':
-    natsEvents['*'].domain['*']['*'].snapshot.data.result.v1['*'],
+  'domain.snapshot.data.state.v1':
+    natsEvents['*'].domain['*']['*'].snapshot.data.state.v1['*'],
 }
 
 export const spec = {

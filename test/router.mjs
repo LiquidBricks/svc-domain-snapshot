@@ -72,7 +72,7 @@ test('router exposes inbound params and runs the data snapshot route through ack
     message,
   })
 
-  assert.equal(routes.length, 6)
+  assert.equal(routes.length, 8)
   assert.deepEqual(order, ['setState', 'publish', 'ack'])
   assert.deepEqual(response.scope.subjectParams, {
     env: 'dev',
@@ -164,7 +164,7 @@ test('router folds componentInstance created into the domain snapshot and publis
         order.push('publishSnapshot')
         assert.equal(
           subject,
-          'prod.domain._.delta.snapshot.instance.result.v1._',
+          'prod.domain._.delta.snapshot.instance.state.v1._',
         )
         assert.deepEqual(JSON.parse(payload), {
           data: {
@@ -203,7 +203,7 @@ test('router folds componentInstance created into the domain snapshot and publis
   assert.deepEqual(response.scope.delta, { 'instance.state': 'created' })
   assert.equal(
     response.scope.snapshotSubject,
-    'prod.domain._.delta.snapshot.instance.result.v1._',
+    'prod.domain._.delta.snapshot.instance.state.v1._',
   )
 })
 
@@ -244,7 +244,7 @@ test('router republishes the delta when an existing snapshot is recovering from 
     natsContext: {
       async publish(subject, payload) {
         order.push('publishSnapshot')
-        assert.equal(subject, 'prod.domain._.delta.snapshot.instance.result.v1._')
+        assert.equal(subject, 'prod.domain._.delta.snapshot.instance.state.v1._')
         assert.deepEqual(JSON.parse(payload).data.delta, {
           'instance.state': 'created',
         })
@@ -265,6 +265,217 @@ test('router republishes the delta when an existing snapshot is recovering from 
   ])
   assert.equal(response.scope.snapshotCreated, false)
   assert.equal(response.scope.snapshotPublished, true)
+})
+
+test('router folds stateMachine started into the instance snapshot and publishes its delta before ack', async () => {
+  const order = []
+  const currentState = {
+    'instance.state': 'created',
+    'data.url': null,
+    'data.url.state': null,
+  }
+  const dataMapper = {
+    query: {
+      async readComponentStateId(payload) {
+        order.push('readComponentStateId')
+        assert.deepEqual(payload, { vertexId: 'instance-vertex-1' })
+        return ['component-state-1']
+      },
+      async readComponentState(payload) {
+        order.push('readComponentState')
+        assert.deepEqual(payload, { vertexId: 'component-state-1' })
+        return [{ state: [currentState] }]
+      },
+    },
+    vertex: {
+      componentState: {
+        async setState(payload) {
+          order.push('setState')
+          assert.deepEqual(payload, {
+            componentStateId: 'component-state-1',
+            state: {
+              'instance.state': 'running',
+              'data.url': null,
+              'data.url.state': null,
+            },
+            updatedAt: '2026-07-26T12:34:56.000Z',
+          })
+        },
+      },
+    },
+  }
+  const message = {
+    subject: 'prod.domain._._.vertex.stateMachine.started.v1._',
+    json() {
+      return {
+        data: {
+          instanceId: 'instance-1',
+          instanceVertexId: 'instance-vertex-1',
+          stateMachineId: 'state-machine-1',
+          state: 'running',
+          dataStateIds: ['data-state-1'],
+          taskStateIds: ['task-state-1'],
+          importInstanceIds: [],
+          gateInstanceIds: [],
+          updatedAt: '2026-07-26T12:34:56.000Z',
+        },
+      }
+    },
+    ack() {
+      order.push('ack')
+    },
+  }
+
+  const router = createDomainSnapshotRouter({
+    diagnostics: makeDiagnostics(),
+    dataMapper,
+    natsContext: {
+      async publish(subject, payload) {
+        order.push('publish')
+        assert.equal(subject, 'prod.domain._.delta.snapshot.instance.state.v1._')
+        assert.deepEqual(JSON.parse(payload), {
+          data: {
+            instanceId: 'instance-1',
+            instanceVertexId: 'instance-vertex-1',
+            componentStateId: 'component-state-1',
+            stateMachineId: 'state-machine-1',
+            type: 'instance',
+            name: 'state',
+            delta: {
+              'instance.state': 'running',
+            },
+            updatedAt: '2026-07-26T12:34:56.000Z',
+          },
+        })
+      },
+    },
+  })
+
+  const response = await router.request({
+    subject: message.subject,
+    message,
+  })
+
+  assert.deepEqual(order, [
+    'readComponentStateId',
+    'readComponentState',
+    'setState',
+    'publish',
+    'ack',
+  ])
+  assert.equal(response.scope.snapshotUpdated, true)
+  assert.equal(response.scope.snapshotPublished, true)
+  assert.deepEqual(response.scope.delta, { 'instance.state': 'running' })
+  assert.equal(
+    response.scope.snapshotSubject,
+    'prod.domain._.delta.snapshot.instance.state.v1._',
+  )
+})
+
+test('router folds stateMachine completed into the instance snapshot and publishes its delta before ack', async () => {
+  const order = []
+  const currentState = {
+    'instance.state': 'running',
+    'data.url': 'https://example.test',
+    'data.url.state': 'started',
+  }
+  const dataMapper = {
+    query: {
+      async findInstanceVertexId(payload) {
+        order.push('findInstanceVertexId')
+        assert.deepEqual(payload, { instanceId: 'instance-1' })
+        return ['instance-vertex-1']
+      },
+      async readComponentStateId(payload) {
+        order.push('readComponentStateId')
+        assert.deepEqual(payload, { vertexId: 'instance-vertex-1' })
+        return ['component-state-1']
+      },
+      async readComponentState(payload) {
+        order.push('readComponentState')
+        assert.deepEqual(payload, { vertexId: 'component-state-1' })
+        return [{ state: [currentState] }]
+      },
+    },
+    vertex: {
+      componentState: {
+        async setState(payload) {
+          order.push('setState')
+          assert.deepEqual(payload, {
+            componentStateId: 'component-state-1',
+            state: {
+              'instance.state': 'complete',
+              'data.url': 'https://example.test',
+              'data.url.state': 'started',
+            },
+            updatedAt: '2026-07-26T12:34:56.000Z',
+          })
+        },
+      },
+    },
+  }
+  const message = {
+    subject: 'prod.domain._._.vertex.stateMachine.completed.v1._',
+    json() {
+      return {
+        data: {
+          instanceId: 'instance-1',
+          stateMachineId: 'state-machine-1',
+          updatedAt: '2026-07-26T12:34:56.000Z',
+        },
+      }
+    },
+    ack() {
+      order.push('ack')
+    },
+  }
+
+  const router = createDomainSnapshotRouter({
+    diagnostics: makeDiagnostics(),
+    dataMapper,
+    natsContext: {
+      async publish(subject, payload) {
+        order.push('publish')
+        assert.equal(subject, 'prod.domain._.delta.snapshot.instance.state.v1._')
+        assert.deepEqual(JSON.parse(payload), {
+          data: {
+            instanceId: 'instance-1',
+            instanceVertexId: 'instance-vertex-1',
+            componentStateId: 'component-state-1',
+            stateMachineId: 'state-machine-1',
+            type: 'instance',
+            name: 'state',
+            delta: {
+              'instance.state': 'complete',
+            },
+            updatedAt: '2026-07-26T12:34:56.000Z',
+          },
+        })
+      },
+    },
+  })
+
+  const response = await router.request({
+    subject: message.subject,
+    message,
+  })
+
+  assert.deepEqual(order, [
+    'findInstanceVertexId',
+    'readComponentStateId',
+    'readComponentState',
+    'setState',
+    'publish',
+    'ack',
+  ])
+  assert.equal(response.scope.instanceVertexId, 'instance-vertex-1')
+  assert.equal(response.scope.snapshotUpdated, true)
+  assert.equal(response.scope.snapshotPublished, true)
+  assert.deepEqual(response.scope.delta, { 'instance.state': 'complete' })
+  assert.equal(
+    response.scope.snapshotSubject,
+    'prod.domain._.delta.snapshot.instance.state.v1._',
+  )
 })
 
 for (const { type, entity, name, result } of [
@@ -345,7 +556,7 @@ for (const { type, entity, name, result } of [
           order.push('publish')
           assert.equal(
             subject,
-            `prod.domain._.state.snapshot.${type}.result.v1._`,
+            `prod.domain._.delta.snapshot.${type}.state.v1._`,
           )
           assert.deepEqual(JSON.parse(payload).data, {
             instanceId: 'instance-1',
@@ -356,6 +567,7 @@ for (const { type, entity, name, result } of [
             stateId: 'state-edge-1',
             type,
             name,
+            state: 'started',
             delta: {
               [`${type}.${name}.state`]: 'started',
             },

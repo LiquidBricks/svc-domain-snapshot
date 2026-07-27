@@ -5,6 +5,8 @@ import * as domain from './core/domain/index.js'
 
 export const routes = [
   [domain.vertex.componentInstance.created.path, domain.vertex.componentInstance.created.spec],
+  [domain.vertex.stateMachine.completed.path, domain.vertex.stateMachine.completed.spec],
+  [domain.vertex.stateMachine.started.path, domain.vertex.stateMachine.started.spec],
   [domain.edge.has_data_state.result_computed.path, domain.edge.has_data_state.result_computed.spec],
   [domain.edge.has_data_state.started.path, domain.edge.has_data_state.started.spec],
   [domain.edge.has_task_state.result_computed.path, domain.edge.has_task_state.result_computed.spec],

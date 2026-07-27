@@ -8,11 +8,13 @@ import {
   ensureConsumer,
 } from '../index.js'
 
-test('consumer configuration includes snapshot initialization and started facts', () => {
+test('consumer configuration includes snapshot initialization and lifecycle facts', () => {
   const { filter_subjects: filterSubjects } = createConsumerConfig()
 
   for (const subject of [
     '*.domain.*.*.vertex.componentInstance.created.v1.*',
+    '*.domain.*.*.vertex.stateMachine.completed.v1.*',
+    '*.domain.*.*.vertex.stateMachine.started.v1.*',
     '*.domain.*.*.edge.has_data_state.started.v1.*',
     '*.domain.*.*.edge.has_task_state.started.v1.*',
   ]) {
