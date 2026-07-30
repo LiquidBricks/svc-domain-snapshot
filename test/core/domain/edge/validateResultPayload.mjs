@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { DOMAIN_SNAPSHOT_PRECONDITION_INVALID } from '@liquid-bricks/lib-diagnostics/codes'
 
 import { validatePayload as validateData } from '../../../../core/domain/edge/has_data_state/result_computed/validatePayload.js'
 import { validatePayload as validateTask } from '../../../../core/domain/edge/has_task_state/result_computed/validatePayload.js'
@@ -65,7 +66,7 @@ test('validator rejects an invalid result timestamp', () => {
       () => validateData({ scope: validScope({ updatedAt }) }),
       (error) => {
         assert.equal(error instanceof DiagnosticError, true)
-        assert.equal(error.code, 'DOMAIN_SNAPSHOT_PRECONDITION_INVALID')
+        assert.equal(error.code, DOMAIN_SNAPSHOT_PRECONDITION_INVALID)
         return true
       },
     )

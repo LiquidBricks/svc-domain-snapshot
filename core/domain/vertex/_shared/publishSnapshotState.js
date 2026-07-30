@@ -1,5 +1,5 @@
 import { create as createSubject } from '@liquid-bricks/lib-nats-subject/create/basic'
-import { Errors } from '../../../../errors.js'
+import { DOMAIN_SNAPSHOT_COMPONENT_STATE_INVALID } from '@liquid-bricks/lib-diagnostics/codes'
 
 export async function publishSnapshotState({
   rootCtx: { natsContext },
@@ -17,7 +17,7 @@ export async function publishSnapshotState({
 }) {
   handlerDiagnostics.require(
     typeof componentStateId === 'string' && componentStateId.length > 0,
-    Errors.COMPONENT_STATE_INVALID,
+    DOMAIN_SNAPSHOT_COMPONENT_STATE_INVALID,
     'componentStateId required before publishing instance snapshot state',
     { instanceId, instanceVertexId, componentStateId },
   )

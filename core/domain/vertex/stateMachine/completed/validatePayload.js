@@ -1,4 +1,4 @@
-import { Errors } from '../../../../../errors.js'
+import { DOMAIN_SNAPSHOT_PRECONDITION_INVALID, DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED } from '@liquid-bricks/lib-diagnostics/codes'
 
 function isIsoDateTime(value) {
   if (typeof value !== 'string') return false
@@ -16,7 +16,7 @@ export function validatePayload({ scope }) {
   ]) {
     handlerDiagnostics.require(
       typeof scope[field] === 'string' && scope[field].length > 0,
-      Errors.PRECONDITION_REQUIRED,
+      DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
       `${field} required for stateMachine completed snapshot`,
       { field },
     )
@@ -24,7 +24,7 @@ export function validatePayload({ scope }) {
 
   handlerDiagnostics.require(
     isIsoDateTime(scope.updatedAt),
-    Errors.PRECONDITION_INVALID,
+    DOMAIN_SNAPSHOT_PRECONDITION_INVALID,
     'updatedAt must be an ISO date-time for stateMachine completed snapshot',
     { field: 'updatedAt' },
   )

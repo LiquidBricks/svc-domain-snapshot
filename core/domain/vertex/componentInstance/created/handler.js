@@ -1,5 +1,5 @@
 import { domain } from '@liquid-bricks/spec-domain/domain'
-import { Errors } from '../../../../../errors.js'
+import { DOMAIN_SNAPSHOT_COMPONENT_STATE_INVALID } from '@liquid-bricks/lib-diagnostics/codes'
 
 function instanceStateDelta() {
   return {
@@ -35,7 +35,7 @@ export async function addToSnapshot({
 
   handlerDiagnostics.require(
     linkedComponentStateIds.length <= 1,
-    Errors.COMPONENT_STATE_INVALID,
+    DOMAIN_SNAPSHOT_COMPONENT_STATE_INVALID,
     'componentInstance must not have multiple componentState snapshots',
     { instanceId, instanceVertexId, componentStateIds: linkedComponentStateIds },
   )

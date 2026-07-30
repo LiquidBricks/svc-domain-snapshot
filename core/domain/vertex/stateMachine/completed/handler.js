@@ -1,5 +1,5 @@
 import { domain } from '@liquid-bricks/spec-domain/domain'
-import { Errors } from '../../../../../errors.js'
+import { DOMAIN_SNAPSHOT_COMPONENT_STATE_INVALID, DOMAIN_SNAPSHOT_COMPONENT_STATE_NOT_FOUND } from '@liquid-bricks/lib-diagnostics/codes'
 
 const first = value => Array.isArray(value) ? value[0] : value
 
@@ -38,13 +38,13 @@ export async function updateSnapshotState({
 
   handlerDiagnostics.require(
     instanceVertexIds.length > 0,
-    Errors.COMPONENT_STATE_NOT_FOUND,
+    DOMAIN_SNAPSHOT_COMPONENT_STATE_NOT_FOUND,
     'componentInstance not found for stateMachine completed snapshot',
     { instanceId },
   )
   handlerDiagnostics.require(
     instanceVertexIds.length === 1,
-    Errors.COMPONENT_STATE_INVALID,
+    DOMAIN_SNAPSHOT_COMPONENT_STATE_INVALID,
     'instanceId must resolve to one componentInstance',
     { instanceId, instanceVertexIds },
   )
@@ -52,7 +52,7 @@ export async function updateSnapshotState({
   const [instanceVertexId] = instanceVertexIds
   handlerDiagnostics.require(
     typeof instanceVertexId === 'string' && instanceVertexId.length > 0,
-    Errors.COMPONENT_STATE_INVALID,
+    DOMAIN_SNAPSHOT_COMPONENT_STATE_INVALID,
     'instanceVertexId must be a non-empty string',
     { instanceId, instanceVertexId },
   )
@@ -65,13 +65,13 @@ export async function updateSnapshotState({
 
   handlerDiagnostics.require(
     componentStateIds.length > 0,
-    Errors.COMPONENT_STATE_NOT_FOUND,
+    DOMAIN_SNAPSHOT_COMPONENT_STATE_NOT_FOUND,
     'componentState not found for componentInstance',
     { instanceId, instanceVertexId },
   )
   handlerDiagnostics.require(
     componentStateIds.length === 1,
-    Errors.COMPONENT_STATE_INVALID,
+    DOMAIN_SNAPSHOT_COMPONENT_STATE_INVALID,
     'componentInstance must not have multiple componentState snapshots',
     { instanceId, instanceVertexId, componentStateIds },
   )
@@ -79,7 +79,7 @@ export async function updateSnapshotState({
   const [componentStateId] = componentStateIds
   handlerDiagnostics.require(
     typeof componentStateId === 'string' && componentStateId.length > 0,
-    Errors.COMPONENT_STATE_INVALID,
+    DOMAIN_SNAPSHOT_COMPONENT_STATE_INVALID,
     'componentStateId must be a non-empty string',
     { instanceId, instanceVertexId, componentStateId },
   )
@@ -91,7 +91,7 @@ export async function updateSnapshotState({
 
   handlerDiagnostics.require(
     currentState != null && typeof currentState === 'object' && !Array.isArray(currentState),
-    Errors.COMPONENT_STATE_INVALID,
+    DOMAIN_SNAPSHOT_COMPONENT_STATE_INVALID,
     'componentState state must be an object',
     { componentStateId, instanceId, instanceVertexId },
   )

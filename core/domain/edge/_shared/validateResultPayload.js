@@ -1,4 +1,4 @@
-import { Errors } from '../../../../errors.js'
+import { DOMAIN_SNAPSHOT_PRECONDITION_INVALID, DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED } from '@liquid-bricks/lib-diagnostics/codes'
 
 const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key)
 
@@ -21,56 +21,56 @@ export function validateResultPayload({ scope }, { type }) {
 
   handlerDiagnostics.require(
     typeof instanceId === 'string' && instanceId.length,
-    Errors.PRECONDITION_REQUIRED,
+    DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
     `instanceId required for ${type} snapshot result`,
     { field: 'instanceId', type },
   )
   handlerDiagnostics.require(
     typeof instanceVertexId === 'string' && instanceVertexId.length,
-    Errors.PRECONDITION_REQUIRED,
+    DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
     `instanceVertexId required for ${type} snapshot result`,
     { field: 'instanceVertexId', type },
   )
   handlerDiagnostics.require(
     typeof stateMachineId === 'string' && stateMachineId.length,
-    Errors.PRECONDITION_REQUIRED,
+    DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
     `stateMachineId required for ${type} snapshot result`,
     { field: 'stateMachineId', type },
   )
   handlerDiagnostics.require(
     typeof stateEdgeId === 'string' && stateEdgeId.length,
-    Errors.PRECONDITION_REQUIRED,
+    DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
     `stateEdgeId required for ${type} snapshot result`,
     { field: 'stateEdgeId', type },
   )
   handlerDiagnostics.require(
     typeof name === 'string' && name.length,
-    Errors.PRECONDITION_REQUIRED,
+    DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
     `name required for ${type} snapshot result`,
     { field: 'name', type },
   )
   handlerDiagnostics.require(
     hasOwn(scope, 'result'),
-    Errors.PRECONDITION_REQUIRED,
+    DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
     `native result required for ${type} snapshot result`,
     { field: 'result', type },
   )
   handlerDiagnostics.require(
     typeof updatedAt === 'string' && updatedAt.length,
-    Errors.PRECONDITION_REQUIRED,
+    DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
     `updatedAt required for ${type} snapshot result`,
     { field: 'updatedAt', type },
   )
   handlerDiagnostics.require(
     isIsoDateTime(updatedAt),
-    Errors.PRECONDITION_INVALID,
+    DOMAIN_SNAPSHOT_PRECONDITION_INVALID,
     `updatedAt must be an ISO date-time for ${type} snapshot result`,
     { field: 'updatedAt', type },
   )
   if (type === 'gate') {
     handlerDiagnostics.require(
       typeof scope.gateInstanceRefId === 'string' && scope.gateInstanceRefId.length,
-      Errors.PRECONDITION_REQUIRED,
+      DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
       'gateInstanceRefId required for gate snapshot result',
       { field: 'gateInstanceRefId', type },
     )

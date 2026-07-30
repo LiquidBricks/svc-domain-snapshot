@@ -1,11 +1,11 @@
-import { Errors } from '../errors.js'
+import { DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED } from '@liquid-bricks/lib-diagnostics/codes'
 
 export function decodeData(selector) {
   return function ({ message, rootCtx: { diagnostics } }) {
     const { data } = message.json()
     diagnostics.require(
       data,
-      Errors.PRECONDITION_REQUIRED,
+      DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
       'Data is required',
       { field: 'data', subject: message.subject },
     )

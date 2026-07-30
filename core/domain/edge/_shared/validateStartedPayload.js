@@ -1,4 +1,4 @@
-import { Errors } from '../../../../errors.js'
+import { DOMAIN_SNAPSHOT_PRECONDITION_INVALID, DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED } from '@liquid-bricks/lib-diagnostics/codes'
 
 function isIsoDateTime(value) {
   if (typeof value !== 'string') return false
@@ -24,7 +24,7 @@ export function validateStartedPayload({ scope }, { type }) {
   ]) {
     handlerDiagnostics.require(
       typeof scope[field] === 'string' && scope[field].length > 0,
-      Errors.PRECONDITION_REQUIRED,
+      DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
       `${field} required for ${type} started snapshot`,
       { field, type },
     )
@@ -32,13 +32,13 @@ export function validateStartedPayload({ scope }, { type }) {
 
   handlerDiagnostics.require(
     scope.type === type,
-    Errors.PRECONDITION_INVALID,
+    DOMAIN_SNAPSHOT_PRECONDITION_INVALID,
     `type must be ${type} for ${type} started snapshot`,
     { field: 'type', expected: type, actual: scope.type },
   )
   handlerDiagnostics.require(
     scope.status === 'running' && scope.stateEdgeStatus === 'running',
-    Errors.PRECONDITION_INVALID,
+    DOMAIN_SNAPSHOT_PRECONDITION_INVALID,
     `status must be running for ${type} started snapshot`,
     {
       field: 'status',
@@ -49,13 +49,13 @@ export function validateStartedPayload({ scope }, { type }) {
   )
   handlerDiagnostics.require(
     scope.deps != null && typeof scope.deps === 'object' && !Array.isArray(scope.deps),
-    Errors.PRECONDITION_INVALID,
+    DOMAIN_SNAPSHOT_PRECONDITION_INVALID,
     `deps must be an object for ${type} started snapshot`,
     { field: 'deps', type },
   )
   handlerDiagnostics.require(
     isIsoDateTime(scope.updatedAt),
-    Errors.PRECONDITION_INVALID,
+    DOMAIN_SNAPSHOT_PRECONDITION_INVALID,
     `updatedAt must be an ISO date-time for ${type} started snapshot`,
     { field: 'updatedAt', type },
   )
