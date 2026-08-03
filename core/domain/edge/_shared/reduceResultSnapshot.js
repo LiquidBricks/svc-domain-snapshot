@@ -20,8 +20,8 @@ function parseState(value) {
   }
 }
 
-function snapshotSubject({ emits, type, subjectParams }) {
-  return createSubject(emits[`domain.snapshot.${type}.result.v1`])
+function snapshotSubject({ emits, type, action, subjectParams }) {
+  return createSubject(emits[`domain.snapshot.${type}.${action}.v1`])
     .forPublish()
     .set({
       env: subjectParams.env,
@@ -32,7 +32,7 @@ function snapshotSubject({ emits, type, subjectParams }) {
     .build()
 }
 
-export function createResultSnapshotReducer({ type }) {
+function createComputationSnapshotReducer({ type, action, includeResult }) {
   return async function reduceResultSnapshot({
     rootCtx: { dataMapper, natsContext },
     routeCtx: { emits },
@@ -47,6 +47,8 @@ export function createResultSnapshotReducer({ type }) {
       gateInstanceRefId,
       name,
       result,
+      status,
+      error,
       updatedAt,
     },
   }) {
@@ -75,7 +77,10 @@ export function createResultSnapshotReducer({ type }) {
     )
 
     const key = `${type}.${name}`
-    const delta = { [key]: result }
+    const delta = {
+      ...(includeResult ? { [key]: result } : {}),
+      [`${key}.state`]: status,
+    }
     const state = { ...currentState, ...delta }
 
     await dataMapper.vertex.componentState.setState({
@@ -84,7 +89,7 @@ export function createResultSnapshotReducer({ type }) {
       updatedAt,
     })
 
-    const subject = snapshotSubject({ emits, type, subjectParams })
+    const subject = snapshotSubject({ emits, type, action, subjectParams })
     await natsContext.publish(
       subject,
       JSON.stringify({
@@ -99,6 +104,9 @@ export function createResultSnapshotReducer({ type }) {
           type,
           name,
           delta,
+          status,
+          stateEdgeStatus: status,
+          ...(error === undefined ? {} : { error }),
           updatedAt,
         },
       }),
@@ -112,8 +120,27 @@ export function createResultSnapshotReducer({ type }) {
       name,
       state,
       delta,
+      status,
+      stateEdgeStatus: status,
+      ...(error === undefined ? {} : { error }),
       updatedAt,
       subject,
     }
   }
+}
+
+export function createResultSnapshotReducer({ type }) {
+  return createComputationSnapshotReducer({
+    type,
+    action: 'result',
+    includeResult: true,
+  })
+}
+
+export function createComputationFailedSnapshotReducer({ type }) {
+  return createComputationSnapshotReducer({
+    type,
+    action: 'computation_failed',
+    includeResult: false,
+  })
 }

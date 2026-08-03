@@ -1,53 +1,21 @@
 import { DOMAIN_SNAPSHOT_PRECONDITION_INVALID, DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED } from '@liquid-bricks/lib-diagnostics/codes'
 
-const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key)
+import { hasOwn, validateComputationPayload } from './validateComputationPayload.js'
 
-function isIsoDateTime(value) {
-  if (typeof value !== 'string') return false
-  const parsed = new Date(value)
-  return !Number.isNaN(parsed.valueOf()) && parsed.toISOString() === value
-}
-
-export function validateResultPayload({ scope }, { type }) {
+export function validateResultPayload(args, { type }) {
+  const { scope } = args
   const {
     handlerDiagnostics,
-    instanceId,
-    instanceVertexId,
-    stateMachineId,
-    stateEdgeId,
-    name,
+    status,
+    stateEdgeStatus,
     updatedAt,
-  } = scope
+  } = validateComputationPayload(args, { type, event: 'result' })
 
   handlerDiagnostics.require(
-    typeof instanceId === 'string' && instanceId.length,
-    DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
-    `instanceId required for ${type} snapshot result`,
-    { field: 'instanceId', type },
-  )
-  handlerDiagnostics.require(
-    typeof instanceVertexId === 'string' && instanceVertexId.length,
-    DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
-    `instanceVertexId required for ${type} snapshot result`,
-    { field: 'instanceVertexId', type },
-  )
-  handlerDiagnostics.require(
-    typeof stateMachineId === 'string' && stateMachineId.length,
-    DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
-    `stateMachineId required for ${type} snapshot result`,
-    { field: 'stateMachineId', type },
-  )
-  handlerDiagnostics.require(
-    typeof stateEdgeId === 'string' && stateEdgeId.length,
-    DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
-    `stateEdgeId required for ${type} snapshot result`,
-    { field: 'stateEdgeId', type },
-  )
-  handlerDiagnostics.require(
-    typeof name === 'string' && name.length,
-    DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
-    `name required for ${type} snapshot result`,
-    { field: 'name', type },
+    status === 'provided' && stateEdgeStatus === 'provided',
+    DOMAIN_SNAPSHOT_PRECONDITION_INVALID,
+    `status and stateEdgeStatus must be provided for ${type} result`,
+    { field: 'status', status, stateEdgeStatus, type },
   )
   handlerDiagnostics.require(
     hasOwn(scope, 'result'),
@@ -56,28 +24,16 @@ export function validateResultPayload({ scope }, { type }) {
     { field: 'result', type },
   )
   handlerDiagnostics.require(
-    typeof updatedAt === 'string' && updatedAt.length,
-    DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
-    `updatedAt required for ${type} snapshot result`,
-    { field: 'updatedAt', type },
-  )
-  handlerDiagnostics.require(
-    isIsoDateTime(updatedAt),
+    !hasOwn(scope, 'error'),
     DOMAIN_SNAPSHOT_PRECONDITION_INVALID,
-    `updatedAt must be an ISO date-time for ${type} snapshot result`,
-    { field: 'updatedAt', type },
+    `error must be omitted for ${type} snapshot result`,
+    { field: 'error', type },
   )
-  if (type === 'gate') {
-    handlerDiagnostics.require(
-      typeof scope.gateInstanceRefId === 'string' && scope.gateInstanceRefId.length,
-      DOMAIN_SNAPSHOT_PRECONDITION_REQUIRED,
-      'gateInstanceRefId required for gate snapshot result',
-      { field: 'gateInstanceRefId', type },
-    )
-  }
 
   return {
     type,
+    status: 'provided',
+    stateEdgeStatus: 'provided',
     updatedAt,
   }
 }

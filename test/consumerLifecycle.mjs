@@ -15,8 +15,14 @@ test('consumer configuration includes snapshot initialization and lifecycle fact
     '*.domain.*.*.vertex.componentInstance.created.v1.*',
     '*.domain.*.*.vertex.stateMachine.completed.v1.*',
     '*.domain.*.*.vertex.stateMachine.started.v1.*',
+    '*.domain.*.*.edge.has_data_state.result_computed.v1.*',
+    '*.domain.*.*.edge.has_data_state.computation_failed.v1.*',
     '*.domain.*.*.edge.has_data_state.started.v1.*',
+    '*.domain.*.*.edge.has_task_state.result_computed.v1.*',
+    '*.domain.*.*.edge.has_task_state.computation_failed.v1.*',
     '*.domain.*.*.edge.has_task_state.started.v1.*',
+    '*.domain.*.*.edge.has_gate_state.result_computed.v1.*',
+    '*.domain.*.*.edge.has_gate_state.computation_failed.v1.*',
   ]) {
     assert.ok(filterSubjects.includes(subject), `missing ${subject}`)
   }

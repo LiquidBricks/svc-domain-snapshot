@@ -1,7 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { createResultSnapshotReducer } from '../../../../../core/domain/edge/_shared/reduceResultSnapshot.js'
+import {
+  createComputationFailedSnapshotReducer,
+  createResultSnapshotReducer,
+} from '../../../../../core/domain/edge/_shared/reduceResultSnapshot.js'
 import { makeDiagnostics } from '../../../../helpers.mjs'
 
 const emits = {
@@ -13,6 +16,17 @@ const emits = {
     channel: 'snapshot',
     entity: 'data',
     action: 'result',
+    version: 'v1',
+    id: '*',
+  },
+  'domain.snapshot.data.computation_failed.v1': {
+    env: '*',
+    ns: 'domain',
+    tenant: '*',
+    context: '*',
+    channel: 'snapshot',
+    entity: 'data',
+    action: 'computation_failed',
     version: 'v1',
     id: '*',
   },
@@ -48,7 +62,7 @@ function makeRootCtx({ currentState, calls, published }) {
   }
 }
 
-test('single-writer reducer merges and persists the full state, then publishes only the delta', async () => {
+test('single-writer reducer merges and persists the result status, then publishes only the delta', async () => {
   const calls = []
   const published = []
   const currentState = {
@@ -85,6 +99,8 @@ test('single-writer reducer merges and persists the full state, then publishes o
       stateId: 'state-edge-1',
       name: 'url',
       result: resultValue,
+      status: 'provided',
+      stateEdgeStatus: 'provided',
       updatedAt,
     },
   })
@@ -104,10 +120,11 @@ test('single-writer reducer merges and persists the full state, then publishes o
   })
   assert.deepEqual(result.delta, {
     'data.url': resultValue,
+    'data.url.state': 'provided',
   })
   assert.deepEqual(result.state, {
     'data.url': resultValue,
-    'data.url.state': 'started',
+    'data.url.state': 'provided',
     'task.fetch': null,
     'task.fetch.state': null,
     'instance.state': 'created',
@@ -118,18 +135,29 @@ test('single-writer reducer merges and persists the full state, then publishes o
   )
   assert.equal(Object.hasOwn(published[0].payload.data, 'state'), false)
   assert.deepEqual(published[0].payload.data.delta, result.delta)
+  assert.equal(published[0].payload.data.status, 'provided')
+  assert.equal(published[0].payload.data.stateEdgeStatus, 'provided')
+  assert.equal(Object.hasOwn(published[0].payload.data, 'error'), false)
   assert.equal(published[0].payload.data.componentStateId, 'component-state-1')
   assert.equal(published[0].payload.data.updatedAt, updatedAt)
 })
 
-test('single-writer reducer treats null as a native result value', async () => {
+test('single-writer reducer preserves the existing result when recording an error status', async () => {
   const calls = []
   const published = []
-  const reducer = createResultSnapshotReducer({ type: 'data' })
+  const error = {
+    name: 'Error',
+    message: 'compute failed',
+    code: 'E_COMPUTE',
+  }
+  const reducer = createComputationFailedSnapshotReducer({ type: 'data' })
 
   const result = await reducer({
     rootCtx: makeRootCtx({
-      currentState: JSON.stringify({ 'data.url': 'old-value' }),
+      currentState: JSON.stringify({
+        'data.url': 'existing-result-sentinel',
+        'data.url.state': 'provided',
+      }),
       calls,
       published,
     }),
@@ -145,12 +173,27 @@ test('single-writer reducer treats null as a native result value', async () => {
       instanceId: 'instance-1',
       instanceVertexId: 'instance-vertex-1',
       name: 'url',
-      result: null,
+      status: 'error',
+      stateEdgeStatus: 'error',
+      error,
       updatedAt: '2026-07-19T12:34:56.000Z',
     },
   })
 
-  assert.deepEqual(result.delta, { 'data.url': null })
-  assert.deepEqual(result.state, { 'data.url': null })
-  assert.deepEqual(published[0].payload.data.delta, { 'data.url': null })
+  assert.deepEqual(result.delta, {
+    'data.url.state': 'error',
+  })
+  assert.deepEqual(result.state, {
+    'data.url': 'existing-result-sentinel',
+    'data.url.state': 'error',
+  })
+  assert.equal(Object.hasOwn(result.delta, 'data.url'), false)
+  assert.deepEqual(published[0].payload.data.delta, result.delta)
+  assert.equal(
+    published[0].subject,
+    'prod.domain._.delta.snapshot.data.computation_failed.v1._',
+  )
+  assert.equal(published[0].payload.data.status, 'error')
+  assert.equal(published[0].payload.data.stateEdgeStatus, 'error')
+  assert.deepEqual(published[0].payload.data.error, error)
 })

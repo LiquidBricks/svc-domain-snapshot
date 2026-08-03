@@ -28,6 +28,7 @@ test('router exposes inbound params and runs the data snapshot route through ack
           order.push('setState')
           assert.deepEqual(payload.state, {
             'data.url': 'https://example.test',
+            'data.url.state': 'provided',
             'task.fetch': null,
           })
         },
@@ -50,9 +51,11 @@ test('router exposes inbound params and runs the data snapshot route through ack
           stateMachineId: 'state-machine-1',
           stateEdgeId: 'state-edge-1',
           stateId: 'state-edge-1',
-          type: 'task',
+          type: 'data',
           name: 'url',
           result: 'https://example.test',
+          status: 'provided',
+          stateEdgeStatus: 'provided',
           updatedAt: '2026-07-19T12:34:56.000Z',
         },
       }
@@ -72,7 +75,7 @@ test('router exposes inbound params and runs the data snapshot route through ack
     message,
   })
 
-  assert.equal(routes.length, 8)
+  assert.equal(routes.length, 11)
   assert.deepEqual(order, ['setState', 'publish', 'ack'])
   assert.deepEqual(response.scope.subjectParams, {
     env: 'dev',
@@ -93,7 +96,10 @@ test('router exposes inbound params and runs the data snapshot route through ack
   assert.equal(Object.hasOwn(published[0].payload.data, 'state'), false)
   assert.deepEqual(published[0].payload.data.delta, {
     'data.url': 'https://example.test',
+    'data.url.state': 'provided',
   })
+  assert.equal(published[0].payload.data.status, 'provided')
+  assert.equal(published[0].payload.data.stateEdgeStatus, 'provided')
 })
 
 test('router folds componentInstance created into the domain snapshot and publishes its delta before ack', async () => {

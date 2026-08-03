@@ -1,14 +1,14 @@
 import { events as natsEvents } from '@liquid-bricks/lib-nats-subject/events/nats'
 import { ackMessage, decodeData } from '../../../../../middleware/index.js'
-import { createResultSnapshotReducer } from '../../_shared/reduceResultSnapshot.js'
+import { createComputationFailedSnapshotReducer } from '../../_shared/reduceResultSnapshot.js'
 import { path } from './subject.js'
 import { validatePayload } from './validatePayload.js'
 
 export { path }
 
 export const emits = {
-  'domain.snapshot.gate.result.v1':
-    natsEvents['*'].domain['*']['*'].snapshot.gate.result.v1['*'],
+  'domain.snapshot.gate.computation_failed.v1':
+    natsEvents['*'].domain['*']['*'].snapshot.gate.computation_failed.v1['*'],
 }
 
 export const spec = {
@@ -24,6 +24,7 @@ export const spec = {
       'type',
       'name',
       'result',
+      'resultValue',
       'status',
       'stateEdgeStatus',
       'error',
@@ -33,7 +34,7 @@ export const spec = {
   pre: [
     validatePayload,
   ],
-  handler: createResultSnapshotReducer({ type: 'gate' }),
+  handler: createComputationFailedSnapshotReducer({ type: 'gate' }),
   post: [
     ackMessage,
   ],
