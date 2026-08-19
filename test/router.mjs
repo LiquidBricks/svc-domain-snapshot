@@ -75,7 +75,7 @@ test('router exposes inbound params and runs the data snapshot route through ack
     message,
   })
 
-  assert.equal(routes.length, 11)
+  assert.equal(routes.length, 12)
   assert.deepEqual(order, ['setState', 'publish', 'ack'])
   assert.deepEqual(response.scope.subjectParams, {
     env: 'dev',

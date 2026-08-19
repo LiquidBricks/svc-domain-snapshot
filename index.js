@@ -23,6 +23,7 @@ export function createConsumerConfig() {
       createBasicSubject(natsEvents['*'].domain['*']['*'].edge.has_task_state.started.v1['*']).forSubscribe().build(),
       createBasicSubject(natsEvents['*'].domain['*']['*'].edge.has_gate_state.result_computed.v1['*']).forSubscribe().build(),
       createBasicSubject(natsEvents['*'].domain['*']['*'].edge.has_gate_state.computation_failed.v1['*']).forSubscribe().build(),
+      createBasicSubject(natsEvents['*'].domain['*']['*'].edge.has_log['*'].v1['*']).forSubscribe().build(),
     ],
   }
 }

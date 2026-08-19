@@ -15,6 +15,7 @@ export const routes = [
   [domain.edge.has_task_state.started.path, domain.edge.has_task_state.started.spec],
   [domain.edge.has_gate_state.result_computed.path, domain.edge.has_gate_state.result_computed.spec],
   [domain.edge.has_gate_state.computation_failed.path, domain.edge.has_gate_state.computation_failed.spec],
+  [domain.edge.has_log.path, domain.edge.has_log.spec],
 ]
 
 export function createDomainSnapshotRouter({

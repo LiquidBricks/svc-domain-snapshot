@@ -1,3 +1,4 @@
 export * as has_data_state from './has_data_state/index.js'
 export * as has_gate_state from './has_gate_state/index.js'
 export * as has_task_state from './has_task_state/index.js'
+export * as has_log from './has_log/index.js'
